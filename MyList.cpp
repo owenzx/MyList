@@ -13,7 +13,7 @@ template<class T>
 class MyList{
 	friend MyList<T> operator + <>(const MyList<T> &l1, const MyList<T> &l2); 
     friend MyList<T> operator + <>(const MyList<T> &l1, const T &item); 
-	friend ostream & operator<< <>(ostream &os, const MyList<T> &obj);//如果T是可以直接cout的类的话（比如int），按Python数组的格式输出MyList中的每一个元素，例如：
+	friend ostream & operator<< <>(ostream &os, const MyList<T> &obj);
 
 private:
 	T *a;
