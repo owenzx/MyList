@@ -7,7 +7,10 @@ template<class T> class MyList;
 template<class T> MyList<T> operator + (const MyList<T> &l1, const MyList<T> &l2);
 template<class T> MyList<T> operator + (const MyList<T> &l1, const T &item);
 template<class T>  ostream & operator << (ostream &os, const MyList<T> &obj);
-
+//the following three classes are exception classes
+class EmptyList{}; 
+class IndexOutOfRange{};
+class AlloFail{};
 
 template<class T>
 class MyList{
@@ -23,19 +26,19 @@ private:
 	void double_space(){
 	// double the space while the current storage is insufficient
 		size *= 2;
+		T *temp = new T[size];
 		try{
-			T *temp = new T[size];
-			if (temp==NULL) throw ('f');
-			for (long i=0; i<len; ++i){
-				temp[i] = a[i];
-			}
-			delete []a;
-			a = temp;
+			if (temp==NULL) throw (AlloFail());
 		}
-		catch(char){
+		catch(AlloFail){
 			cerr << "Allocation failure" << endl;
 			exit(1);
 		}
+		for (long i=0; i<len; ++i){
+			temp[i] = a[i];
+		}
+		delete []a;
+		a = temp;
 	}
 	
 public:
@@ -43,11 +46,25 @@ public:
 		len = 0;
 		size = 100;
 		a = new T[size];
+		try{
+			if (a==NULL) throw (AlloFail());
+		}
+		catch(AlloFail){
+			cerr << "Allocation failure" << endl;
+			exit(1);
+		}
 	}
 	
 	MyList(int num, const T &item):size(num),len(num){
 	// fill MyList with item for num times
 		a = new T[size];
+		try{
+			if (a==NULL) throw (AlloFail());
+		}
+		catch(AlloFail){
+			cerr << "Allocation failure" << endl;
+			exit(1);
+		}
 		for (long i=0; i<len; ++i){
 			a[i] = item;
 		}
@@ -56,6 +73,13 @@ public:
 	MyList(const MyList &l):size(l.size),len(l.len){
 	// deep copy the other MyList
 		a = new T [size];
+		try{
+			if (a==NULL) throw (AlloFail());
+		}
+		catch(AlloFail){
+			cerr << "Allocation failure" << endl;
+			exit(1);
+		}
 		for (long i=0; i<len; ++i){
 			a[i] = l[i];
 		}
@@ -64,6 +88,13 @@ public:
     MyList(T* arr, int len_arr):size(len_arr),len(len_arr){
     //construct MyList with the first len_arr elements of array arr
 		a = new T [size];
+		try{
+			if (a==NULL) throw (AlloFail());
+		}
+		catch(AlloFail){
+			cerr << "Allocation failure" << endl;
+			exit(1);
+		}
 		for (long i=0; i<len; ++i){
 			a[i] = arr[i];
 		}
@@ -78,11 +109,12 @@ public:
 	T pop(){
 	//delete and return the last element of MyList
 		try{
-			if (len==0) throw len;
+			if (len==0) throw EmptyList();
 			return a[--len];
 		}
-		catch(int){
+		catch(EmptyList){
 			cerr << "The list is empty!" << endl; 
+			exit(1);
 		}
 	}
 	
@@ -93,7 +125,7 @@ public:
 			index = len + index;
 		}
 		++len;
-		for (long i=index+1; i<len; ++i){
+		for (long i=len-1; i>index; --i){
 			a[i] = a[i-1];
 		}
 		a[index] = item;
@@ -121,36 +153,39 @@ public:
 	T get_item(int index) const {
 	//return the elements in index position	
 		try{
-			if (index >= len) throw index;
+			if (index >= len) throw IndexOutOfRange();
 			index =(len+index)%len;
 			return a[index];
 		}
-		catch(int){
-			cerr << "Index required is out of range!" << endl; 
+		catch(IndexOutOfRange){
+			cerr << "Index required is out of range!" << endl;
+			exit(1); 
 		}
 	}
 	
 	MyList<T> get_item(int start, int end) const{
 	//return a new MyList with elements from start to end of this MyList
 		try{
-			if (start >= len || end >= len) throw len;
-			start =(len+start)%len; end=(len+end)%len;
-			if (start>end){
-				MyList<T> temp;
-				return temp;
-			}else{
-				T arr[end-start+1];
-				for (long i=start; i<=end; ++i){
-					arr[i-start] = a[i];
-				}
-				MyList<T> temp(arr, end-start+1);
-				return temp;
-			}
-		} 
-		catch(int){
+			if (start >= len || end >= len) throw IndexOutOfRange();
+		}
+		catch(IndexOutOfRange){
 			cerr << "Index required is out of range!" << endl; 
 			exit(1);
 		}
+		start =(len+start)%len; end=(len+end)%len;
+		if (start>end){
+			MyList<T> temp;
+			return temp;
+		}else{
+			T arr[end-start+1];
+			for (long i=start; i<=end; ++i){
+				arr[i-start] = a[i];
+			}
+			MyList<T> temp(arr, end-start+1);
+			return temp;
+		}
+		 
+		
 	}
 	
 	int count(const T &item) const {
@@ -205,11 +240,11 @@ public:
 	T &operator [](int index) const {
     //return the elements in index position	
 		try{
-			if (index >= len) throw index;
+			if (index >= len) throw IndexOutOfRange();
 			index =(len+index)%len;
 			return a[index];
 		}
-		catch(int){
+		catch(IndexOutOfRange){
 			cerr << "Index required is out of range!" << endl; 
 			exit(1);
 		}
@@ -221,12 +256,13 @@ public:
 		int i, j;
 		T mid, t;
 		try{
-			if (l<0 || r>=len) throw 0;
+			if (l<0 || r>=len) throw IndexOutOfRange();
 			i = l; j = r;
 		}
-		catch(int){
+		catch(IndexOutOfRange){
 			cerr << "Index required is out of range!" << endl;
-			exit(1);
+			cerr << "The list is not sorted!"<< endl;
+			return;
 		}
 		mid = a[(l+r)/2];
 		if (less){
@@ -255,6 +291,13 @@ public:
 	void reverse(){
 	//reverse the elements in MyList
 		T *temp = new T[size];
+		try{
+			if (temp==NULL) throw (AlloFail());
+		}
+		catch(AlloFail){
+			cerr << "Allocation failure" << endl;
+			exit(1);
+		}
 		for (long i=0; i<len; ++i){
 			temp[i] = a[len-1-i];
 		}
@@ -329,9 +372,8 @@ int main(){
 	a.erase(2, 5); // a = [15, 4, 1, 0, 12]
 	//NOTICE: Element 1 is missed in the origin file! 
 	b = a + a; // b = [15, 4, 1, 0, 12, 15, 4, 1, 0, 12]
-	
 	b.insert(3, 116); // b = [15, 4, 1, 116, 0, 12, 15, 4, 1, 0, 12]
-	b.remove(4); // b = [15, 0, 116, ...]
+	b.remove(4); // b = [15, 1, 116, ...]
 	cout<<b<<endl;
 	MyList<double> c(10, 3.14);
 	for (i=0; i<100; ++i)
