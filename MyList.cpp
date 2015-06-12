@@ -70,7 +70,7 @@ public:
 		}
 	}
 		
-	MyList(const MyList &l):size(l.size),len(l.len){
+	MyList(const MyList &l):size(l.get_size()),len(l.get_size()){
 	// deep copy the other MyList
 		a = new T [size];
 		try{
